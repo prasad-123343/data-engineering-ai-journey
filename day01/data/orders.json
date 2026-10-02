@@ -1,0 +1,28 @@
+
+[
+  {
+    "order_id": 101,
+    "customer": "Ravi",
+    "amount": 1200
+  },
+  {
+    "order_id": 102,
+    "customer": "Priya",
+    "amount": 800
+  },
+  {
+    "order_id": 103,
+    "customer": "Ravi",
+    "amount": 1500
+  },
+  {
+    "order_id": 104,
+    "customer": "Arjun",
+    "amount": 500
+  },
+  {
+    "order_id": 105,
+    "customer": "Priya",
+    "amount": 2200
+  }
+]
