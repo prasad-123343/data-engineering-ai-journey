@@ -1,0 +1,24 @@
+[
+    {
+        "order_id": 101,
+        "customer": "Ravi",
+        "price": 250,
+        "quantity": 3
+    },
+    {
+        "order_id": 102,
+        "customer": "Mahesh",
+        "price": 500,
+        "quantity": 2
+    },
+    {
+        "order_id": 103,
+        "customer": "Priya",
+        "price": 300,
+        "quantity": 2
+    }
+]
+
+
+
+
