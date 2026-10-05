@@ -1,0 +1,7 @@
+order_id,customer,price,quantity
+101,Ravi,250,3
+102,Mahesh,500,2
+103,Priya,300,2
+104,Arun,-100,1
+105,,200,2
+106,Sita,150,4
