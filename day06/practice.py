@@ -1,8 +1,15 @@
 orders = [
     {"order_id": 101, "customer": "Ravi", "amount": 500},
-    {"order_id": 102, "customer": "Priya", "amount": -200},
+   {"order_id": 102, "customer": "Priya", "amount": "500"},
     {"order_id": 103, "customer": "", "amount": 300}
 ]
+
+import logging
+
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(levelname)s: %(message)s"
+)
 
 valid_orders = []
 rejected_orders = []
@@ -16,16 +23,36 @@ for order in orders:
     if not order.get("customer") or not order["customer"].strip():
         reasons.append("Missing or blank customer")
 
-    if order.get("amount") is None or order["amount"] < 0:
-        reasons.append("Amount must be zero or greater")
+
+    amount = order.get("amount")
+
+    if amount is None:
+      reasons.append("Missing amount")
+    elif isinstance(amount, bool):
+        reasons.append("Amount must be numeric")
+    else:
+       try:
+         amount = int(amount)
+       except (ValueError, TypeError):
+          reasons.append("Amount must be a valid integer")
+       else:
+        if amount < 0:
+            reasons.append("Amount must be zero or greater")
+        else:
+            order["amount"] = amount
+
+
 
     if reasons:
         rejected_orders.append({
-            "order": order,
-            "reasons": reasons
-        })
+           "order": order,
+           "reasons": reasons
+         })
+        logging.warning("Order rejected: %s", reasons)
+
     else:
         valid_orders.append(order)
+        logging.info("Order accepted")
 
 print("Total orders:", len(orders))
 print("Valid order count:", len(valid_orders))
@@ -48,114 +75,105 @@ else:
     print("No orders to process")
 
 
-# using try and except 
+# # using try and except
 
-values =    ["100", "250", "abc", "400", "xyz"]
-
-
-total = 0
-invalid_count = 0
-
-for value in values :
-    try:
-        number = int(value)
-        total += number
-    except ValueError:
-        invalid_count +=1
-print("total:",total)
-print("no of invalid values:",invalid_count)
+# values =    ["100", "250", "abc", "400", "xyz"]
 
 
+# total = 0
+# invalid_count = 0
 
-orders = [
-    {"order_id": 101, "amount": 500},
-    {"order_id": 102},
-    {"order_id": 103, "amount": 300},
-    {"order_id": 104}
-]
-
-
-total = 0
-missing_amount_count = 0
-
-for order in orders:
-    try:
-        amount =order["amount"]
-        total += amount
-    except KeyError:
-        missing_amount_count +=1
-
-print("Total :",total)
-print("missing amount count :" ,missing_amount_count)
+# for value in values :
+#     try:
+#         number = int(value)
+#         total += number
+#     except ValueError:
+#         invalid_count +=1
+# print("total:",total)
+# print("no of invalid values:",invalid_count)
 
 
+# orders = [
+#     {"order_id": 101, "amount": 500},
+#     {"order_id": 102},
+#     {"order_id": 103, "amount": 300},
+#     {"order_id": 104}
+# ]
 
 
+# total = 0
+# missing_amount_count = 0
 
-orders = [
-    {"order_id": 201, "amount": "500"},
-    {"order_id": 202},
-    {"order_id": 203, "amount": "abc"},
-    {"order_id": 204, "amount": "300"},
-    {"order_id": 205, "amount": "xyz"}
-]
+# for order in orders:
+#     try:
+#         amount =order["amount"]
+#         total += amount
+#     except KeyError:
+#         missing_amount_count +=1
+
+# print("Total :",total)
+# print("missing amount count :" ,missing_amount_count)
 
 
-# using  key and value errors
+# orders = [
+#     {"order_id": 201, "amount": "500"},
+#     {"order_id": 202},
+#     {"order_id": 203, "amount": "abc"},
+#     {"order_id": 204, "amount": "300"},
+#     {"order_id": 205, "amount": "xyz"}
+# ]
 
-Total = 0
-Missing_amount_count = 0
-Invalid_amount_count = 0
 
-for order in orders:
-    try:
+# # using  key and value errors
+
+# Total = 0
+# Missing_amount_count = 0
+# Invalid_amount_count = 0
+
+# for order in orders:
+#     try:
         
-        amount = order["amount"]
-        number = int(amount)
-        Total += number
+#         amount = order["amount"]
+#         number = int(amount)
+#         Total += number
 
-    except ValueError:
-         Invalid_amount_count += 1
+#     except ValueError:
+#          Invalid_amount_count += 1
 
-    except KeyError:
-        Missing_amount_count += 1
+#     except KeyError:
+#         Missing_amount_count += 1
 
-print("total:",Total)
-print("missing amount error:",Missing_amount_count)
-print("invalid amount count :",Invalid_amount_count)
-
-
+# print("total:",Total)
+# print("missing amount error:",Missing_amount_count)
+# print("invalid amount count :",Invalid_amount_count)
 
 
+# # else and finally
+
+# values = ["100", "abc", "250"]
+
+# for value in values:
+#        try:
+#               number = int(value)
+#        except ValueError:
+#               print("invalid error")
+#        else: 
+#               print("valid error",number)
+
+#        finally:
+#               print("Processing attempt finished")
 
 
-# else and finally
+# values = [100, 200, -50, 300, -10]
 
-values = ["100", "abc", "250"]
+# for value in values:
+#     try:
+#         number =int(value)
 
-for value in values:
-       try:
-              number = int(value)
-       except ValueError:
-              print("invalid error")
-       else: 
-              print("valid error",number)
-
-       finally:
-              print("Processing attempt finished")
-
-
-
-values = [100, 200, -50, 300, -10]
-
-for value in values:
-    try:
-        number =int(value)
-
-        if number < 0:
-            raise ValueError("negative values are not allowed")
+#         if number < 0:
+#             raise ValueError("negative values are not allowed")
         
-        print("accepted :",value)
+#         print("accepted :",value)
 
-    except ValueError as error:
-        print("rejected:",value,"-",error)
+#     except ValueError as error:
+#         print("rejected:",value,"-",error)
