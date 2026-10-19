@@ -17,7 +17,7 @@ import logging
 import math 
 
 logging.basicConfig(
-    level=logging.INFO,
+    level=logging.info,
     format="%(asctime)s | %(levelname)s | %(message)s"
 )
 

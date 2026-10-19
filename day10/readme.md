@@ -1,482 +1,298 @@
-
-# Day 10 — Python Logging Pipeline
+# Day 10 --- Python Logging Pipeline
 
 ## 1. Project Overview
 
-This project demonstrates how to use Python's built-in `logging` module to track the execution of an order-validation pipeline.
+This project demonstrates how Python's built-in `logging` module tracks
+execution of an order-validation pipeline. The pipeline validates order
+records, separates valid orders from rejected orders, and logs important
+events at different severity levels. Changing the logging level from
+`INFO` to `DEBUG` changes the amount of diagnostic information shown,
+not the validation logic.
 
-The pipeline processes a list of orders, validates their data, separates valid orders from rejected orders, and records important events using different logging severity levels.
+### Objectives
 
-The project also demonstrates how changing the logging level from `INFO` to `DEBUG` affects the amount of information displayed during execution.
-
-### Project Objectives
-
-- Understand why logging is important in Python applications.
-- Learn the difference between `DEBUG`, `INFO`, `WARNING`, `ERROR`, and `CRITICAL`.
-- Configure logging using `logging.basicConfig()`.
-- Include timestamps and severity levels in log messages.
-- Record successful operations and validation failures.
-- Understand how exception information can be logged.
-- Compare program execution at `INFO` and `DEBUG` levels.
-- Understand the limitations of console-only logging.
-- Apply logging concepts to a simple data-validation pipeline.
-
----
+-   Understand why logging matters in a data pipeline.
+-   Learn `DEBUG`, `INFO`, `WARNING`, `ERROR`, and `CRITICAL`.
+-   Configure logging with `logging.basicConfig()`.
+-   Record timestamps, successful processing, and validation failures.
+-   Compare `INFO` and `DEBUG`.
+-   Understand exception logging and the limitations of console-only
+    logs.
 
 ## 2. Project Structure
 
-```text
+The example commands below assume this structure. If your actual script
+has a different path or filename, update the commands accordingly.
+
+``` text
 day10/
 ├── logging_pipeline.py
 └── README.md
 ```
 
-### File Descriptions
-
-**logging_pipeline.py**
-
-Contains the order-validation pipeline, logging configuration, sample order data, validation logic, and command-line arguments for selecting the logging level.
-
-**README.md**
-
-Documents the purpose of the project, implementation details, execution instructions, observed results, and limitations.
-
----
+-   **`logging_pipeline.py`** contains sample data, validation logic,
+    logging configuration, and order processing.
+-   **`README.md`** documents the purpose, behavior, execution, results,
+    and limitations.
 
 ## 3. Why Logging Was Added
 
-Logging is the process of recording events that occur while a program is running.
+Logging records events that happen while a program runs. In a data
+pipeline, it helps developers track processing, identify rejected
+records, investigate errors, and check whether a run completed.
 
-In a data pipeline, it is important to understand what happened during execution, which records were processed successfully, which records were rejected, and whether unexpected errors occurred.
+### Benefits
 
-Without logging, a developer may have difficulty investigating a pipeline failure, especially when processing a large number of records.
-
-For example, if an order contains a negative price, the pipeline should record why that order was rejected.
-
-Logging provides a structured way to record this information.
-
-### Benefits of Logging
-
-1. **Monitoring execution:** Records when the pipeline starts and finishes.
-2. **Tracking data quality:** Records validation failures and rejection reasons.
-3. **Debugging:** Provides detailed information about program execution.
-4. **Error investigation:** Can capture exception messages and tracebacks.
-5. **Auditing:** Helps review recorded processing events after execution, provided the logs are retained.
-6. **Maintainability:** Makes it easier to understand the behavior of a program without adding many temporary print statements.
-
-In this project, logging is used to record pipeline progress, successful validations, rejected orders, and final processing counts.
-
----
+1.  **Monitoring:** Records pipeline start and completion.
+2.  **Data quality:** Records validation failures and rejection reasons.
+3.  **Debugging:** Reveals details about program execution.
+4.  **Error investigation:** Can record exceptions and tracebacks when
+    exception logging is implemented.
+5.  **Auditing:** Helps review events later when logs are retained.
+6.  **Maintainability:** Reduces reliance on temporary `print()`
+    statements.
 
 ## 4. Sample Input Data
 
-The pipeline processes five sample orders.
+The Python example previously reviewed processes three orders:
 
-```python
+``` python
 orders = [
-    {"order_id": 201, "price": 200, "quantity": 2},
-    {"order_id": 202, "price": -50, "quantity": 1},
-    {"order_id": 203, "price": 100, "quantity": 3},
-    {"order_id": 204, "price": 150, "quantity": 0},
-    {"order_id": 205, "price": 80, "quantity": 2},
+    {"order_id": 201, "customer": "Ravi", "price": 200, "quantity": 2},
+    {"order_id": 202, "customer": "Priya", "quantity": 3},
+    {"order_id": 203, "customer": "Arjun", "price": "unknown", "quantity": 1},
 ]
 ```
 
-Each order contains three fields:
+Required fields are `order_id`, `customer`, `price`, and `quantity`.
 
-- `order_id`: Identifies the order.
-- `price`: Represents the price per unit.
-- `quantity`: Represents the number of units ordered.
+### Validation rules
 
-### Validation Rules
+-   The record must be a dictionary.
+-   All required fields must be present.
+-   `customer` must be a non-empty string.
+-   `order_id` must be a positive integer.
+-   `price` must be numeric, finite, and not negative.
+-   `quantity` must be a positive integer.
 
-An order is considered valid when:
+**Important:** The current Python code allows a price of zero because it
+rejects only `price < 0`. If the business rule requires a strictly
+positive price, update the code and this documentation together.
 
-- It contains an `order_id`.
-- It contains a `price`.
-- It contains a `quantity`.
-- Its price is greater than zero.
-- Its quantity is greater than zero.
+### Expected results
 
-An order that fails validation is added to the rejected-orders collection.
+    Order ID Issue                    Result     Reason
+  ---------- ------------------------ ---------- -------------------------------
+         201 All fields valid         Accepted   Total = 200 × 2 = 400
+         202 `price` missing          Rejected   Missing required field: price
+         203 `price` is `"unknown"`   Rejected   Price must be numeric
 
-### Expected Validation Results
-
-| Order ID | Price | Quantity | Result | Reason |
-|---|---:|---:|---|---|
-| 201 | 200 | 2 | Valid | All checks passed |
-| 202 | -50 | 1 | Rejected | Price must be positive |
-| 203 | 100 | 3 | Valid | All checks passed |
-| 204 | 150 | 0 | Rejected | Quantity must be positive |
-| 205 | 80 | 2 | Valid | All checks passed |
-
-The pipeline should process five orders, accept three, and reject two.
-
----
+Expected totals: **3 processed, 1 accepted, 2 rejected**.
 
 ## 5. Logging Configuration
 
-The project uses Python's built-in `logging` module.
+The reviewed code configures logging like this:
 
-The logging configuration is defined using `logging.basicConfig()`.
-
-```python
+``` python
 logging.basicConfig(
-    filename=None,
-    level=level,
-    format="%(asctime)s - %(levelname)s - %(message)s",
-    datefmt="%Y-%m-%d %H:%M:%S",
-    force=True,
+    level=logging.INFO,
+    format="%(asctime)s | %(levelname)s | %(message)s"
 )
 ```
 
-The `filename=None` argument is optional and can be omitted. Without a filename, basic logging normally uses a console stream handler.
+To see DEBUG messages, change `level=logging.INFO` to
+`level=logging.DEBUG` and run the script again.
 
-### Explanation of Configuration Arguments
+-   **`level`** sets the minimum severity threshold.
+-   **`format`** controls the structure of each log message.
+-   **`%(asctime)s`** is the timestamp.
+-   **`%(levelname)s`** is the severity name.
+-   **`%(message)s`** is the log message.
 
-**level**
-
-Specifies the minimum severity level that the root logger processes.
-
-The project uses either `logging.INFO` or `logging.DEBUG`, depending on the command-line argument.
-
-**format**
-
-Defines the structure of each log message.
-
-The format contains three fields:
-
-- `%(asctime)s`: Timestamp of the log record.
-- `%(levelname)s`: Severity level of the message.
-- `%(message)s`: The actual log message.
-
-**datefmt**
-
-Defines how the timestamp is displayed.
-
-The format `%Y-%m-%d %H:%M:%S` displays the year, month, day, hour, minute, and second.
-
-**force=True**
-
-Reconfigures the root logger by removing and closing its existing handlers before applying the new configuration. This is useful when running the program repeatedly in environments that may already have configured logging.
-
----
+Because no filename is specified, logging normally writes to the
+console. `filename=None` is unnecessary. `logging.basicConfig()`
+normally does not reconfigure the root logger if handlers already exist;
+`force=True` can replace them, but should be used deliberately.
 
 ## 6. Logging Severity Levels
 
-Python provides five standard severity levels.
+Severity increases in this order:
 
-### 6.1 DEBUG
-
-`DEBUG` is used for detailed diagnostic information.
-
-It helps developers understand the internal execution of a program.
-
-In this project, DEBUG messages record the total number of received orders and the validation step for each order.
-
-Example:
-
-```python
-logger.debug("Validating order %s", order_id)
-```
-
-This message is useful when investigating how the pipeline processes individual orders.
-
-### 6.2 INFO
-
-`INFO` records normal events that confirm the program is operating as expected.
-
-In this project, INFO messages record:
-
-- Pipeline startup.
-- Successful order validation.
-- Pipeline completion.
-- The final number of valid and rejected orders.
-
-Example:
-
-```python
-logger.info("Order %s validated successfully", order_id)
-```
-
-INFO messages provide a useful overview of the pipeline's execution.
-
-### 6.3 WARNING
-
-`WARNING` indicates an unexpected or undesirable condition that does not necessarily stop the program.
-
-In this project, invalid prices and quantities are treated as expected data-quality problems.
-
-Example:
-
-```python
-logger.warning(
-    "Order %s rejected: %s",
-    order_id,
-    error,
-)
-```
-
-The warning explains why an order was rejected, while the pipeline continues processing the remaining orders.
-
-### 6.4 ERROR
-
-`ERROR` indicates that an operation has failed and needs investigation.
-
-For example, an unexpected failure during an important processing operation may be recorded at ERROR level.
-
-An error log does not automatically raise an exception or terminate the program.
-
-### 6.5 CRITICAL
-
-`CRITICAL` indicates a severe problem that may prevent the application from continuing.
-
-For example, a pipeline might record a critical event if a required service becomes unavailable and processing cannot continue.
-
-This level is not expected to be triggered by the current sample data.
-
-### Severity Order
-
-```text
+``` text
 DEBUG < INFO < WARNING < ERROR < CRITICAL
 ```
 
-The levels are ordered by increasing severity.
+### DEBUG
 
----
+Detailed diagnostic messages, such as identifying which order is
+currently being validated.
 
-## 7. INFO Level vs DEBUG Level
-
-The project accepts a command-line argument named `--log-level`.
-
-The default level is `INFO`.
-
-### Running at INFO Level
-
-Command:
-
-```bash
-python day10/logging_pipeline.py --log-level INFO
+``` python
+logging.debug("Validating order %s", order_id)
 ```
 
-At INFO level, the pipeline records:
+### INFO
 
-- Startup information.
-- Successful validation messages.
-- Rejected-order warnings.
-- Final processing counts.
+Normal progress, such as pipeline startup, number of orders received,
+accepted orders, final counts, and completion.
 
-Detailed DEBUG messages are filtered out.
+### WARNING
 
-### Why DEBUG Is Hidden
+An undesirable but recoverable condition. An invalid order can be logged
+as a warning while the pipeline continues processing other orders.
 
-The severity value of DEBUG is lower than INFO.
-
-When the logging threshold is INFO, DEBUG messages do not meet the threshold and are filtered out.
-
-This reduces unnecessary diagnostic output during normal execution.
-
-### Running at DEBUG Level
-
-Command:
-
-```bash
-python day10/logging_pipeline.py --log-level DEBUG
+``` python
+logging.warning("Order %s rejected: %s", order_id, reason)
 ```
 
-At DEBUG level, the pipeline records:
+### ERROR
 
-- The total number of input orders.
-- The validation step for each order.
-- All INFO-level messages.
-- All WARNING-level messages.
+An operation failed and needs investigation, such as a failed database
+write. Logging an error does not automatically raise an exception,
+retry, or stop the program.
 
-ERROR and CRITICAL messages would also be eligible for logging if generated.
+### CRITICAL
 
-### Comparison
+A severe problem that may prevent the application from continuing, such
+as the loss of a required service with no safe recovery path.
 
-| Behavior | INFO | DEBUG |
-|---|---|---|
-| Pipeline startup | Visible | Visible |
-| Successful validations | Visible | Visible |
-| Rejection warnings | Visible | Visible |
-| Total input count in debug message | Hidden | Visible |
-| Individual validation steps | Hidden | Visible |
-| Validation results | Same | Same |
+## 7. INFO vs DEBUG
 
-The logging level changes the visibility of messages, not the validation rules or final counts.
+The previously reviewed code changes the logging level in
+`basicConfig()`; it does **not** use a `--log-level` command-line
+argument unless you add argument-parsing code.
 
----
+  Behavior                                  INFO        DEBUG
+  ----------------------------------------- ----------- -----------
+  Pipeline startup                          Visible     Visible
+  Number of input orders (logged at INFO)   Visible     Visible
+  Accepted-order messages                   Visible     Visible
+  Rejection warnings                        Visible     Visible
+  Per-order validation messages             Hidden      Visible
+  Final counts                              Visible     Visible
+  Processing logic and results              Unchanged   Unchanged
+
+At `INFO`, DEBUG messages are filtered out. At `DEBUG`, DEBUG and
+higher-severity messages are eligible to be emitted. Handler
+configuration and filters can also affect what is ultimately displayed.
 
 ## 8. Exception Logging
 
-Exception logging helps developers investigate unexpected failures.
+`logging.exception()` records a message at ERROR level and includes
+information about the active exception, including its traceback. It is
+normally used inside an `except` block.
 
-Python provides `logging.exception()` to record an error message together with information about the active exception, including its traceback.
-
-Example:
-
-```python
+``` python
 try:
     result = 100 / 0
-
 except ZeroDivisionError:
     logging.exception("Calculation failed")
 ```
 
-The resulting log contains the error message and traceback, including the exception type and message.
+A traceback helps locate where an exception occurred and shows the call
+sequence leading to it.
 
-### Why Tracebacks Matter
-
-An exception message alone may not provide enough information to identify where a failure occurred.
-
-The traceback helps locate the code path that caused the exception.
-
-In the order-validation pipeline, expected validation failures are handled and recorded as warnings. The `logger.exception()` call is reserved for the unexpected data-error handling branch in the sample implementation.
-
-The supplied sample orders should not trigger that branch because their fields have the expected types and structure.
-
----
+**Implementation note:** The Python code previously reviewed did not
+contain a `logging.exception()` branch. The example above explains the
+concept separately; do not claim exception logging is implemented in the
+pipeline unless you add and test it. Expected validation failures should
+normally be recorded as rejection warnings.
 
 ## 9. Results and Output Analysis
 
-After processing all five sample orders, the expected counts are:
+For the sample data, expected results are:
 
-```text
-Valid orders: 3
+``` text
+Valid orders: 1
 Rejected orders: 2
 ```
 
-### Valid Orders
+-   **Accepted:** Order 201, total 400.
+-   **Rejected:** Order 202 because `price` is missing.
+-   **Rejected:** Order 203 because `price` is not numeric.
 
-- Order 201
-- Order 203
-- Order 205
-
-### Rejected Orders
-
-- Order 202: Price must be positive.
-- Order 204: Quantity must be positive.
-
-### Interpretation
-
-The pipeline correctly separates valid and rejected records according to the implemented validation rules.
-
-The INFO run provides an overview of processing. The DEBUG run adds more detailed information about the execution of each validation step.
-
-Both runs should produce the same valid and rejected counts.
-
-The output counts should be verified by running the program rather than inferred solely from the logging messages.
-
----
+The INFO run provides an overview. The DEBUG run adds per-order
+validation messages. Both runs should produce the same processing
+counts. Run the script to verify the actual output.
 
 ## 10. Limitations of Console-Only Logging
 
-The current implementation uses console logging rather than persistent log-file storage.
+-   **No dedicated persistent log file:** Output may be lost when the
+    terminal closes if it was not saved elsewhere.
+-   **Limited historical investigation:** It is harder to compare runs
+    without retained logs.
+-   **No automatic alerts:** The script does not alert anyone when a
+    failure occurs.
+-   **No centralized logging:** Logs from different services are not
+    automatically collected into one searchable place.
+-   **No retention or rotation:** The project does not limit log storage
+    or define how long logs are kept.
+-   **Sensitive-data risk:** Logs must not expose passwords, access
+    tokens, or unnecessary personal information.
 
-This is sufficient for a small learning exercise, but it has limitations.
+### Possible improvements
 
-### 10.1 No Persistent Log File
+-   Add a file handler or `filename="pipeline.log"`.
+-   Configure console and file handlers if both are needed.
+-   Add automated tests for accepted and rejected orders.
+-   Consider structured logging for easier searching.
+-   Add log rotation and retention policies.
+-   Integrate monitoring and alerting.
+-   Include useful identifiers, such as a pipeline run ID, without
+    exposing sensitive data.
 
-The application does not explicitly save its log records to a dedicated log file.
-
-Once terminal output is lost, the messages may no longer be available for investigation.
-
-### 10.2 Limited Historical Investigation
-
-Without retained logs, it is difficult to compare failures across multiple runs or investigate problems that occurred earlier.
-
-### 10.3 No Automatic Monitoring
-
-The application does not send alerts when a pipeline fails.
-
-A developer must inspect the output or use an external monitoring system.
-
-### 10.4 No Centralized Logging
-
-In a distributed data pipeline, different components may run on different machines or services.
-
-Console output from one process is not automatically collected and searchable alongside logs from other components.
-
-### 10.5 No Log Rotation or Retention Policy
-
-A production application may need to control how long logs are retained and how much storage they consume.
-
-This project does not implement log rotation or retention policies.
-
-### 10.6 Sensitive Data Risks
-
-Logs can accidentally expose confidential information if complete records, passwords, access tokens, or personal information are recorded.
-
-Production pipelines should log only the information necessary for debugging and monitoring.
-
-### Possible Future Improvements
-
-- Write log records to a file using `filename="pipeline.log"`.
-- Configure both console and file handlers.
-- Add automated tests for valid and rejected orders.
-- Introduce structured logging for easier analysis.
-- Add log rotation and retention policies.
-- Integrate monitoring and alerting for production failures.
-
-These improvements are outside the scope of the current exercise.
-
----
+These are future improvements, not features claimed to be implemented in
+the current example.
 
 ## 11. How to Run the Project
 
-Run the commands from the repository root.
+Run commands from the repository root. These examples assume the script
+is `day10/logging_pipeline.py`; change the path if needed.
 
-### INFO Run
+1.  Set `level=logging.INFO`, save the file, and run:
 
-```bash
-python day10/logging_pipeline.py --log-level INFO
-```
+    ``` bash
+    python day10/logging_pipeline.py
+    ```
 
-### DEBUG Run
+2.  Change the level to `logging.DEBUG`, save the file, and run the same
+    command again:
 
-```bash
-python day10/logging_pipeline.py --log-level DEBUG
-```
+    ``` bash
+    python day10/logging_pipeline.py
+    ```
 
 On Windows, use `py` instead of `python` if necessary.
 
-### What to Verify
+### Verify
 
-After both runs, verify that:
-
-1. The pipeline processes five orders.
-2. Three orders are accepted.
-3. Two orders are rejected.
-4. INFO messages appear in both runs.
-5. DEBUG messages appear only in the DEBUG run.
-6. The rejection reasons are recorded correctly.
-7. The final counts remain unchanged between runs.
-
----
+1.  Three orders are processed.
+2.  One order is accepted and two are rejected.
+3.  INFO messages appear in both runs.
+4.  Per-order DEBUG messages appear only in the DEBUG run.
+5.  Rejection reasons are correct.
+6.  Final counts are unchanged between runs.
 
 ## 12. Key Learnings
 
-Through this project, I learned:
-
-- How to use Python's built-in logging module.
-- How to configure logging using `basicConfig()`.
-- How severity levels control the visibility of log records.
-- How to include timestamps and severity levels in log messages.
-- How to record successful processing events and validation warnings.
-- How exception logging helps investigate unexpected failures.
-- How INFO and DEBUG runs differ.
-- How logging supports data-quality monitoring in a data pipeline.
-- Why console-only logging is limited for production applications.
-
----
+-   Using Python's built-in logging module.
+-   Configuring logging with `basicConfig()`.
+-   Understanding severity thresholds and message formatting.
+-   Recording accepted orders and validation warnings.
+-   Understanding the purpose of exception logging and tracebacks.
+-   Comparing INFO and DEBUG output.
+-   Applying logging to data-quality monitoring.
+-   Recognizing the limitations of console-only logs.
 
 ## 13. Conclusion
 
-This project demonstrates how logging improves the visibility and debuggability of a Python order-validation pipeline.
+This project demonstrates how logging improves the visibility and
+debuggability of a Python order-validation pipeline. The pipeline
+validates sample orders, records accepted and rejected records, explains
+rejection reasons, and displays processing counts. Comparing INFO and
+DEBUG demonstrates how the logging threshold changes diagnostic detail
+without changing the intended processing logic.
 
-The pipeline processes sample orders, records successful validations, reports rejected orders, and displays final processing counts.
-
-Running the program at INFO and DEBUG levels demonstrates how logging configuration controls the amount of diagnostic information without changing the underlying processing results.
-
-This forms a foundation for building more reliable data pipelines, where logging, validation, exception handling, and monitoring work together to make failures easier to identify and investigate.
+These concepts are a foundation for more reliable data pipelines, where
+validation, logging, exception handling, monitoring, and recovery help
+developers identify and investigate failures.
