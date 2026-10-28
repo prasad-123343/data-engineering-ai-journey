@@ -5,7 +5,7 @@ valid_orders = []
 rejected_orders = []
 processed_order_ids = set()
 
-# 1. Read the CSV file and validate records
+# Read and validate orders
 with open(
     "day11/data/orders.csv",
     "r",
@@ -15,61 +15,58 @@ with open(
     reader = csv.DictReader(file)
 
     for row in reader:
-        order_id = row["order_id"].strip()
         customer = row["customer"].strip()
-        amount = row["amount"].strip()
+        amount_text = row["amount"].strip()
+        reason = ""
+        amount = None
 
-        # Check whether customer is missing
+        # 1. Check missing customer
         if not customer:
-            rejected_orders.append(row)
+            reason = "Missing customer"
+
+        # 2. Check missing amount
+        elif not amount_text:
+            reason = "Missing amount"
+
+        # 3. Check whether amount is an integer
+        else:
+            try:
+                amount = int(amount_text)
+            except ValueError:
+                reason = "Amount is not an integer"
+
+        # 4. Check negative amount only after successful conversion
+        if not reason and amount is not None and amount < 0:
+            reason = "Negative amount"
+
+        # 5. Check duplicate order ID
+        if not reason and row["order_id"] in processed_order_ids:
+            reason = "Duplicate order ID"
+
+        # Reject invalid records and save their reasons
+        if reason:
+            rejected_record = row.copy()
+            rejected_record["rejection_reason"] = reason
+            rejected_orders.append(rejected_record)
             continue
 
-        # Check whether amount is missing
-        if not amount:
-            rejected_orders.append(row)
-            continue
-
-        # Convert amount to an integer
-        try:
-            amount = int(amount)
-        except ValueError:
-            rejected_orders.append(row)
-            continue
-
-        # Reject negative amounts
-        if amount < 0:
-            rejected_orders.append(row)
-            continue
-
-        # Check for duplicate order IDs
-        if order_id in processed_order_ids:
-            rejected_orders.append(row)
-            continue
-
-        # Remember the accepted order ID
-        processed_order_ids.add(order_id)
-
-        # Store the validated and transformed record
-        row["order_id"] = order_id
+        # Store valid records
         row["customer"] = customer
         row["amount"] = amount
         valid_orders.append(row)
+        processed_order_ids.add(row["order_id"])
 
 
-# 2. Display validation results
-print("Total input orders:", len(valid_orders) + len(rejected_orders))
-print("Valid orders:", len(valid_orders))
-print("Rejected orders:", len(rejected_orders))
-
-
-# 3. Calculate total revenue from valid orders
+# Calculate total revenue
 total_revenue = 0
 
 for order in valid_orders:
     total_revenue += order["amount"]
 
+print("Total revenue:", total_revenue)
 
-# 4. Calculate revenue by customer
+
+# Calculate revenue by customer
 revenue_by_customer = {}
 
 for order in valid_orders:
@@ -81,22 +78,33 @@ for order in valid_orders:
     else:
         revenue_by_customer[customer] = amount
 
-
-# 5. Display valid records
-print("\nValid records:")
-
-for order in valid_orders:
-    print(order)
-
-
-# 6. Display rejected records
-print("\nRejected records:")
-
-for order in rejected_orders:
-    print(order)
-
-
-# 7. Display transformation results
-print("\n--- Transformation Summary ---")
-print("Total revenue:", total_revenue)
 print("Revenue by customer:", revenue_by_customer)
+
+
+# Save rejected records to a CSV file
+output_path = "day11/data/rejected_orders.csv"
+
+fieldnames = [
+    "order_id",
+    "customer",
+    "amount",
+    "city",
+    "rejection_reason"
+]
+
+with open(
+    output_path,
+    "w",
+    encoding="utf-8",
+    newline=""
+) as file:
+    writer = csv.DictWriter(file, fieldnames=fieldnames)
+
+    writer.writeheader()
+    writer.writerows(rejected_orders)
+
+
+# Print record counts
+print("Valid orders:", len(valid_orders))
+print("Rejected orders:", len(rejected_orders))
+print("Rejected records saved to:", output_path)

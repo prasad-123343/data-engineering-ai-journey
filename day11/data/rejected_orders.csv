@@ -1,0 +1,6 @@
+order_id,customer,amount,city,rejection_reason
+104,,900,Chennai,Missing customer
+105,Sita,,Bengaluru,Missing amount
+106,Rahul,abc,Hyderabad,Amount is not an integer
+107,Anu,-500,Chennai,Negative amount
+101,Ravi,1200,Visakhapatnam,Duplicate order ID
