@@ -1,0 +1,16 @@
+{
+    "orders": [
+        {
+            "order_id": 101,
+            "customer": "Ravi",
+            "amount": 1200,
+            "city": "Visakhapatnam"
+        },
+        {
+            "order_id": 104,
+            "customer": "Sita",
+            "amount": 2000,
+            "city": "Bengaluru"
+        }
+    ]
+}

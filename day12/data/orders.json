@@ -1,0 +1,28 @@
+{
+    "orders": [
+        {
+            "order_id": 101,
+            "customer": "Ravi",
+            "amount": 1200,
+            "city": "Visakhapatnam"
+        },
+        {
+            "order_id": 102,
+            "customer": "Priya",
+            "amount": 800,
+            "city": "Hyderabad"
+        },
+        {
+            "order_id": 103,
+            "customer": "Arjun",
+            "amount": 1500,
+            "city": "Vijayawada"
+        },
+        {
+            "order_id": 104,
+            "customer": "Sita",
+            "amount": 2000,
+            "city": "Bengaluru"
+        }
+    ]
+}

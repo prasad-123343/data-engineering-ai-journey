@@ -1,0 +1,40 @@
+{
+    "rejected_orders": [
+        {
+            "order": {
+                "order_id": 102,
+                "customer": "",
+                "amount": 800,
+                "city": "Hyderabad"
+            },
+            "rejection_reason": "Missing or invalid customer"
+        },
+        {
+            "order": {
+                "order_id": 103,
+                "customer": "Arjun",
+                "amount": -500,
+                "city": "Vijayawada"
+            },
+            "rejection_reason": "Amount must be greater than zero"
+        },
+        {
+            "order": {
+                "order_id": 101,
+                "customer": "Priya",
+                "amount": 1500,
+                "city": "Hyderabad"
+            },
+            "rejection_reason": "Duplicate order_id"
+        },
+        {
+            "order": {
+                "order_id": 105,
+                "customer": "Rahul",
+                "amount": "abc",
+                "city": "Chennai"
+            },
+            "rejection_reason": "Amount must be an integer"
+        }
+    ]
+}
