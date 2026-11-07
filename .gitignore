@@ -1,0 +1,10 @@
+# Python cache files
+__pycache__/
+*.py[cod]
+
+# SQLite database files
+*.db
+
+# Generated Day 13 JSON output
+day13/output/*.json
+day13/project work/output/*.json
