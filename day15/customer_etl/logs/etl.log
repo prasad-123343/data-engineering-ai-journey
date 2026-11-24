@@ -1,0 +1,10 @@
+2026-11-23 09:00:00 INFO Pipeline started
+2026-11-23 09:01:00 INFO Extracting customer data
+2026-11-23 09:02:00 INFO Extracted 1000 records
+2026-11-23 09:03:00 INFO Validation started
+2026-11-23 09:04:00 WARNING 5 records rejected
+2026-11-23 09:05:00 INFO Transformation completed
+2026-11-23 09:06:00 ERROR Database connection failed
+2026-11-23 09:07:00 INFO Retrying database connection
+2026-11-23 09:08:00 INFO Database connection successful
+2026-11-23 09:09:00 INFO Pipeline completed
