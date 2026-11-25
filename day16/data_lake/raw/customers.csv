@@ -1,0 +1,6 @@
+customer_id,name,city
+1,Alice,Hyderabad
+2,Bob,Chennai
+3,Charlie,Bengaluru
+4,,Mumbai
+5,David,Pune
