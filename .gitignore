@@ -8,3 +8,27 @@ __pycache__/
 # Generated Day 13 JSON output
 day13/output/*.json
 day13/project work/output/*.json
+
+
+
+
+
+# Environment and secrets
+.env
+.env.*
+!.env.example
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+
+# Database files
+*.db
+*.sqlite3
+
+# Generated ETL files
+day17/project/data/rejected_sales.csv
+
+# Logs
+day17/project/logs/*.log
